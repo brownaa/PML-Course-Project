@@ -1,0 +1,31 @@
+---
+title: "PML Course Project"
+author: "Aaron Brown"
+date: "May 15, 2016"
+output: html_document
+---
+
+```{r Setup, echo = FALSE}
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+# getwd()
+# knitr::opts_knit$get("root.dir")
+```  
+###Download Training and Testing Data  
+```{r Download Training and Testing Data}
+if(!file.exists("./data/pml-training.csv"))
+    download.file(
+        url = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv',
+        destfile = './data/pml-training.csv')
+if(!file.exists("./data/pml-testing.csv"))
+    download.file(
+        url = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',
+        destfile = './data/pml-testing.csv')
+training = read.csv("data/pml-training.csv")
+testing = read.csv("data/pml-testing.csv")
+```  
+
+###Running Data Cleaning processes  
+Preparing the data for analysis, the columns which were completely empty in the test data set are dropped from the analysis.  Additionally, while ingesting the data, some variables took a different **class** between testing and training datasets (i.e., integer, numeric, factor, logical, etc.).  
+```{r Data Cleaning}
+source("./src/datacleaning.R")  #messages are suppressed
+```
