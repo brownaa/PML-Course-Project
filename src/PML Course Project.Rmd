@@ -20,8 +20,8 @@ if(!file.exists("./data/pml-testing.csv"))
     download.file(
         url = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',
         destfile = './data/pml-testing.csv')
-training = read.csv("data/pml-training.csv")
-testing = read.csv("data/pml-testing.csv")
+training = read.csv("./data/pml-training.csv")
+testing = read.csv("./data/pml-testing.csv")
 ```  
 
 ###Running Data Cleaning processes  
@@ -29,3 +29,55 @@ Preparing the data for analysis, the columns which were completely empty in the 
 ```{r Data Cleaning}
 source("./src/datacleaning.R")  #messages are suppressed
 ```
+
+###Creating Validation Sets  
+In this code snippet, the validation set taken from the training data to build the model.  
+```{r Create validation and training sets}
+require(caret)
+set.seed(34289)
+inTrain = createDataPartition(training$user_name, p = 3/4)[[1]]
+validation = training[-inTrain,]
+training = training[inTrain,]
+```
+
+###Model Building  
+In this assessment, an **RPART** and **Random Forest** model are used to train the classification algorithm to the *training* dataset.  This is only run on a subset of the original training data in order to assess the accuracy of the trained models against the *validation* data.
+
+Cross Validation was achieved by subsetting the training set into a model training and validation set.  The model is then applied to the test set for evaluation in the course quiz.
+
+```{r Model Building, cache = TRUE}
+trainctrl <- trainControl(verboseIter = FALSE)
+modelFit1 = train(classe ~ ., data = training[,-c(1:5)], preProcess = "pca", method = "rpart")
+modelFit2 = train(classe ~ ., data = training[,-c(1:5)], 
+                  preProcess = "pca", method = "rf", 
+                  trControl = trainctrl)
+
+pred1 = predict(modelFit1, validation)
+pred2 = predict(modelFit2, validation)
+```  
+Using the **confusionMatrix** function, the accuracy of the two models is assessed
+```{r Assessing the accuracy of the developed models}
+cM.pred1 = confusionMatrix(pred1, validation$classe) #predection accuracy stats for the RPART model
+cM.pred2 = confusionMatrix(pred2, validation$classe) #prediction accuracy stats for the Random Forest model
+pred1.acc = cM.pred1$overall[1]
+pred2.acc = cM.pred2$overall[1]
+```  
+
+Predicted Out of Sample Model Accuracy Results  
+
+* RPART:            `r pred1.acc`  
+* Random Forest:    `r pred2.acc`
+
+Based on the resulting out of sample accuracy, the **Random Forest** model performs the best and was applied to use on the quiz.
+
+
+###Quiz Solutions
+```{r Quiz Solutions}
+pred.test = predict(modelFit2, testing)
+question = c(1:20)
+quizsolution = data.frame(question, answer = pred.test)
+
+require(pander)
+panderOptions("digits", 2)
+pander(quizsolution)
+```  

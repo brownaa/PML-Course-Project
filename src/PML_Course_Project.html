@@ -133,13 +133,237 @@ if(!file.exists(&quot;./data/pml-testing.csv&quot;))
     download.file(
         url = 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',
         destfile = './data/pml-testing.csv')
-training = read.csv(&quot;data/pml-training.csv&quot;)
-testing = read.csv(&quot;data/pml-testing.csv&quot;)</code></pre>
+training = read.csv(&quot;./data/pml-training.csv&quot;)
+testing = read.csv(&quot;./data/pml-testing.csv&quot;)</code></pre>
 </div>
 <div id="running-data-cleaning-processes" class="section level3">
 <h3>Running Data Cleaning processes</h3>
 <p>Preparing the data for analysis, the columns which were completely empty in the test data set are dropped from the analysis. Additionally, while ingesting the data, some variables took a different <strong>class</strong> between testing and training datasets (i.e., integer, numeric, factor, logical, etc.).</p>
-<pre class="r"><code>source(&quot;./src/datacleaning.R&quot;)</code></pre>
+<pre class="r"><code>source(&quot;./src/datacleaning.R&quot;)  #messages are suppressed</code></pre>
+</div>
+<div id="creating-validation-sets" class="section level3">
+<h3>Creating Validation Sets</h3>
+<p>In this code snippet, the validation set taken from the training data to build the model.</p>
+<pre class="r"><code>require(caret)</code></pre>
+<pre><code>## Loading required package: caret</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>set.seed(34289)
+inTrain = createDataPartition(training$user_name, p = 3/4)[[1]]
+validation = training[-inTrain,]
+training = training[inTrain,]</code></pre>
+</div>
+<div id="model-building" class="section level3">
+<h3>Model Building</h3>
+<p>In this assessment, an <strong>RPART</strong> and <strong>Random Forest</strong> model are used to train the classification algorithm to the <em>training</em> dataset. This is only run on a subset of the original training data in order to assess the accuracy of the trained models against the <em>validation</em> data.</p>
+<p>Cross Validation was achieved by subsetting the training set into a model training and validation set. The model is then applied to the test set for evaluation in the course quiz.</p>
+<pre class="r"><code>trainctrl &lt;- trainControl(verboseIter = FALSE)
+modelFit1 = train(classe ~ ., data = training[,-c(1:5)], preProcess = &quot;pca&quot;, method = &quot;rpart&quot;)</code></pre>
+<pre><code>## Loading required package: rpart</code></pre>
+<pre class="r"><code>modelFit2 = train(classe ~ ., data = training[,-c(1:5)], 
+                  preProcess = &quot;pca&quot;, method = &quot;rf&quot;, 
+                  trControl = trainctrl)</code></pre>
+<pre><code>## Loading required package: randomForest</code></pre>
+<pre><code>## randomForest 4.6-12</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: 'randomForest'</code></pre>
+<pre><code>## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
+<pre><code>## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range
+
+## Warning in randomForest.default(x, y, mtry = param$mtry, ...): invalid
+## mtry: reset to within valid range</code></pre>
+<pre class="r"><code>pred1 = predict(modelFit1, validation)
+pred2 = predict(modelFit2, validation)</code></pre>
+<p>Using the <strong>confusionMatrix</strong> function, the accuracy of the two models is assessed</p>
+<pre class="r"><code>cM.pred1 = confusionMatrix(pred1, validation$classe) #predection accuracy stats for the RPART model
+cM.pred2 = confusionMatrix(pred2, validation$classe) #prediction accuracy stats for the Random Forest model
+pred1.acc = cM.pred1$overall[1]
+pred2.acc = cM.pred2$overall[1]</code></pre>
+<p>Predicted Out of Sample Model Accuracy Results</p>
+<ul>
+<li>RPART: 0.3450245<br />
+</li>
+<li>Random Forest: 0.9800163</li>
+</ul>
+<p>Based on the resulting out of sample accuracy, the <strong>Random Forest</strong> model performs the best and was applied to use on the quiz.</p>
+</div>
+<div id="quiz-solutions" class="section level3">
+<h3>Quiz Solutions</h3>
+<pre class="r"><code>pred.test = predict(modelFit2, testing)
+question = c(1:20)
+quizsolution = data.frame(question, answer = pred.test)
+
+require(pander)</code></pre>
+<pre><code>## Loading required package: pander</code></pre>
+<pre class="r"><code>panderOptions(&quot;digits&quot;, 2)
+pander(quizsolution)</code></pre>
+<table style="width:26%;">
+<colgroup>
+<col width="15%"></col>
+<col width="11%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">question</th>
+<th align="center">answer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">B</td>
+</tr>
+<tr class="even">
+<td align="center">2</td>
+<td align="center">A</td>
+</tr>
+<tr class="odd">
+<td align="center">3</td>
+<td align="center">B</td>
+</tr>
+<tr class="even">
+<td align="center">4</td>
+<td align="center">A</td>
+</tr>
+<tr class="odd">
+<td align="center">5</td>
+<td align="center">A</td>
+</tr>
+<tr class="even">
+<td align="center">6</td>
+<td align="center">B</td>
+</tr>
+<tr class="odd">
+<td align="center">7</td>
+<td align="center">D</td>
+</tr>
+<tr class="even">
+<td align="center">8</td>
+<td align="center">B</td>
+</tr>
+<tr class="odd">
+<td align="center">9</td>
+<td align="center">A</td>
+</tr>
+<tr class="even">
+<td align="center">10</td>
+<td align="center">A</td>
+</tr>
+<tr class="odd">
+<td align="center">11</td>
+<td align="center">B</td>
+</tr>
+<tr class="even">
+<td align="center">12</td>
+<td align="center">C</td>
+</tr>
+<tr class="odd">
+<td align="center">13</td>
+<td align="center">B</td>
+</tr>
+<tr class="even">
+<td align="center">14</td>
+<td align="center">A</td>
+</tr>
+<tr class="odd">
+<td align="center">15</td>
+<td align="center">E</td>
+</tr>
+<tr class="even">
+<td align="center">16</td>
+<td align="center">E</td>
+</tr>
+<tr class="odd">
+<td align="center">17</td>
+<td align="center">A</td>
+</tr>
+<tr class="even">
+<td align="center">18</td>
+<td align="center">B</td>
+</tr>
+<tr class="odd">
+<td align="center">19</td>
+<td align="center">B</td>
+</tr>
+<tr class="even">
+<td align="center">20</td>
+<td align="center">B</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 
